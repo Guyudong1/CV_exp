@@ -1,7 +1,7 @@
 # 实验一：计算机视觉库的安装
 
 ## 实验目的：
-#### 通过安装anaconda，OpenCV，SKlearn等计算机视觉库，为以后的计算机视觉学习打下基础。
+#### 通过安装anaconda环境，pytorch深度学习框架和OpenCV，SKlearn等计算机视觉库，为以后的计算机视觉学习打下基础。
 
 ## 实验内容：
 ### 1.安装anaconda：
