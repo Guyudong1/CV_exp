@@ -24,7 +24,7 @@
 ## 实验结果与分析：
 
 <p style="text-indent: 2em;">成功安装“anaconda”、“Pytorch”、“OpenCV”、“SKlearn”四个计算机视觉库。结果如下图所示：</p>
-<div align="center"> <img src="https://github.com/user-attachments/assets/4ea4a6f5-b793-4e89-9ce5-4dfc659e882d" width="75%" alt="实验结果验证"/> </div>
+<div align="center"> <img src="https://github.com/user-attachments/assets/4ea4a6f5-b793-4e89-9ce5-4dfc659e882d" width="80%" alt="实验结果验证"/> </div>
 
 ## 实验小结：
 
