@@ -13,21 +13,21 @@ print(b, g, r)
 # 输出原始图像
 plt.imshow(img)
 plt.title('Original Image')
-plt.savefig('output_images/original_bgr.jpg', dpi=300)
+plt.savefig('result/original_bgr.jpg', dpi=300)
 plt.show()
 
 # 颜色空间转换，将原始图像BGR格式 转换成 RGB格式，蓝色和红色互换，因为把'B'和'R'通道互换了
 rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 plt.imshow(rgb_img)
 plt.title('RGB Image')
-plt.savefig('output_images/rgb_image.jpg', dpi=300)
+plt.savefig('result/rgb_image.jpg', dpi=300)
 plt.show()
 
 # 将原始图像的RBG格式转换为灰度图
 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 plt.imshow(gray_img, cmap='gray')
 plt.title('Gray Image')
-plt.savefig('output_images/gray_image.jpg', dpi=300)
+plt.savefig('result/gray_image.jpg', dpi=300)
 plt.show()
 
 # ==========================添加噪声=========================
@@ -49,7 +49,7 @@ plt.imshow(gus_noise_img, cmap='gray')
 plt.title('Gus Noise')
 
 plt.tight_layout()
-plt.savefig('output_images/noise_comparison.jpg', dpi=300)
+plt.savefig('result/noise_comparison.jpg', dpi=300)
 plt.show()
 
 
@@ -81,5 +81,5 @@ plt.imshow(gus_3, cmap='gray')
 plt.title("gus noise img with mean")
 
 plt.tight_layout()
-plt.savefig('output_images/filter_results.jpg', dpi=300)
+plt.savefig('result/filter_results.jpg', dpi=300)
 plt.show()
