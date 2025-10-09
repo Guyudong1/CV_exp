@@ -62,6 +62,7 @@ plt.show()
 <img src="https://github.com/user-attachments/assets/10877d06-b003-4b89-b61f-86cac9add7f9" width="400">
 
 ### 2.3 添加噪声
+- 这里在原始图像的基础上添加噪声，引入了两个API方法，椒盐噪声和高斯噪声
 ```
 # ==========================添加噪声=========================
 # mode='s&p'代表椒盐噪声，s代表白色，p代表黑色，amount=0.4代表会有40%的像素会随机替换为白色或者黑色像素
@@ -88,6 +89,9 @@ plt.tight_layout()
 plt.savefig('output_images/noise_comparison.jpg', dpi=300)
 plt.show()
 ```
+<img src="https://github.com/user-attachments/assets/ab4d6829-df1e-41a6-9860-362439f60147" width="700">
+
+
 ### 2.4 图像滤波
 ```
 # =========================图像滤波=============================
