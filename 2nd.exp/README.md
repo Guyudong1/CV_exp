@@ -96,36 +96,50 @@ plt.show()
 
 ### 2.4 图像滤波
 将图像认为产生噪声后，用OpenCV的三个API滤波方式进行对比，分别对椒盐滤波和高斯滤波使用【均值滤波】，【中值滤波】，【高斯滤波】，对比每个最适合的滤波方式。
-
 ```
 # =========================图像滤波=============================
-# 均值滤波，用（5,5）的滤波核对椒盐噪声的去噪
-mean_3 = cv2.blur(sp_noise_img, (5, 5))
-# 中值滤波，用（5,5）的邻域，用邻域内的中位数替代中心像素度对椒盐噪声的去噪
-mid_3 = cv2.medianBlur((sp_noise_img*255).astype(np.uint8), 5)
-# 均值滤波，用（5,5）的滤波核对高斯噪声的去噪
-gus_3 = cv2.blur(gus_noise_img, (5, 5))
-# =========================图像显示=============================
-plt.figure(figsize=(12, 4))  # 让图像显示更大更清晰
+# 均值滤波
+mean_sp = cv2.blur(sp_noise_img, (5, 5))
+mean_gus = cv2.blur(gus_noise_img, (5, 5))
 
-plt.subplot(1, 4, 1)
-plt.imshow(sp_noise_img, cmap='gray')
-plt.title("img with s&p noise")
+# 中值滤波（需要 uint8）
+mid_sp = cv2.medianBlur((sp_noise_img*255).astype(np.uint8), 5)
+mid_gus = cv2.medianBlur((gus_noise_img*255).astype(np.uint8), 5)
 
-plt.subplot(1, 4, 2)
-plt.imshow(mean_3, cmap='gray')
-plt.title("s&p noise img with mean")
+# 高斯滤波
+gauss_sp = cv2.GaussianBlur((sp_noise_img*255).astype(np.uint8), (5, 5), 0)
+gauss_gus = cv2.GaussianBlur((gus_noise_img*255).astype(np.uint8), (5, 5), 0)
 
-plt.subplot(1, 4, 3)
-plt.imshow(mid_3, cmap='gray')
-plt.title("s&p noise img with median")
+# 图像显示
+plt.figure(figsize=(13, 9))
+# 第1行：椒盐噪声
+plt.subplot(2, 3, 1)
+plt.imshow(mean_sp)
+plt.title("S&P noise with Mean Filter")
 
-plt.subplot(1, 4, 4)
-plt.imshow(gus_3, cmap='gray')
-plt.title("gus noise img with mean")
+plt.subplot(2, 3, 2)
+plt.imshow(mid_sp)
+plt.title("S&P Noise with Median Filter")
+
+plt.subplot(2, 3, 3)
+plt.imshow(gauss_sp)
+plt.title("S&P Noise with Gaussian Filter")
+
+# 第2行：高斯噪声
+plt.subplot(2, 3, 4)
+plt.imshow(mean_gus)
+plt.title("Gaussian noise with Mean Filter")
+
+plt.subplot(2, 3, 5)
+plt.imshow(mid_gus)
+plt.title("Gaussian noise with Median Filter")
+
+plt.subplot(2, 3, 6)
+plt.imshow(gauss_gus)
+plt.title("Gaussian noise with Gaussian Filter")
 
 plt.tight_layout()
-plt.savefig('output_images/filter_results.jpg', dpi=300)
+plt.savefig('result/filter_results_2x3.jpg', dpi=300)
 plt.show()
 ```
 图像滤波对比图：<br>
