@@ -1,4 +1,5 @@
-# 实验二：图像增强
+# 实验二：图像增强  
+### 202310310169-顾禹东
 ## 一、实验目的
 学会OpenCV的基本使用方法，利用OpenCV等计算机库对图像进行平滑、滤波等操作，实现图像增强。
 
@@ -92,7 +93,7 @@ plt.savefig('output_images/noise_comparison.jpg', dpi=300)
 plt.show()
 ```
 噪声对比图：<br>
-<img src="https://github.com/user-attachments/assets/56860d77-02cb-42f8-8ba3-5cd662def009" width="900">
+<img src="https://github.com/user-attachments/assets/eaba2a47-fb97-44d4-a6cd-e40d22f1c009" width="900">
 
 ### 2.4 图像滤波
 将图像认为产生噪声后，用OpenCV的三个API滤波方式进行对比，分别对椒盐滤波和高斯滤波使用【均值滤波】，【中值滤波】，【高斯滤波】，对比每个最适合的滤波方式。
