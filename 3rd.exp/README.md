@@ -1,9 +1,19 @@
 # 实验三：图像关键点检测及图像拼接
 #### 202310310169-顾禹东
+
+> **文件说明**  
+> 本实验的代码在`code.py`文件中，
+> 本实验的输入图像在`img`文件夹中，
+> 本实验的输出结果在`result`文件夹中。
+
 ## 一、实验目的
 图像关键点检测及图像拼接实验报告，基于SIFT特征检测算法和FLANN特征匹配方法，实现两幅图像的特征点提取、匹配和自动拼接，掌握图像配准和融合的基本原理与实现方法。
 ## 二、实验内容
 ### 1.导入必要库
+- cv2:OpenCV库 <br>
+- numpy:Numpy库 <br>
+- matplotlib.pyplot:可视化库 <br>
+- os:操作系统交互的核心库 <br>
 ```python
 import cv2
 import numpy as np
@@ -11,6 +21,12 @@ import matplotlib.pyplot as plt
 import os
 ```
 ### 2.读取图像并预处理
+这里先读取两张图像作为拼接的原素材， 再将图像转换为灰度图，
+原因：
+- 效率：大幅减少计算量
+- 鲁棒性：提高对光照和颜色变化的稳定性
+- 专注性：聚焦于结构纹理信息，避免颜色干扰
+- 标准化：符合大多数经典特征检测算法的输入要求
 ```python
 # 读取图像
 img_a = cv2.imread("img/a.jpg")
@@ -66,7 +82,10 @@ matched_keypoints_img = cv2.drawMatches(
 <img src="https://github.com/user-attachments/assets/9f0b5858-4c3b-464e-9b16-2f53591fc77c" alt="rgb_image" width="400">
 
 ### 4.图像拼接
-
+#### 图像拼接的几何变换核心流程
+- 图像拼接的几何变换过程始于特征点坐标的精确提取，其中`src_pts`从待变换的源图像（img_b）中获取匹配关键点坐标，而`dst_pts`则从基准图像（img_a）中提取对应点坐标，这些点对建立了两幅图像之间的空间对应关系。接着，系统采用RANSAC算法鲁棒地估计3×3单应性矩阵H，该矩阵定义了从img_b到img_a的透视变换关系，其中的重投影误差阈值（5.0）有效控制了内点筛选的严格程度，确保在存在部分错误匹配的情况下仍能获得准确的变换参数。<br>
+- 在确定几何关系后，算法计算img_b四个角点经过透视变换后的新位置，通过将变换后的img_b角点与原始img_a角点合并，计算出所有角点的最小和最大坐标值，从而确定最终拼接图像的完整尺寸范围。为了处理变换后可能出现的负坐标问题，系统创建了一个平移矩阵，将整个变换结果平移到正坐标区域，确保所有像素都位于可视范围内。<br>
+- 最后，通过对img_b应用组合变换（透视变换与平移变换的结合），并将img_a精确复制到变换后图像的对应位置，实现了两幅图像的无缝空间对齐和内容融合。这一完整的"特征匹配→几何估计→图像变换"技术流水线，体现了计算机视觉中图像配准的核心原理，为生成高质量的全景拼接图像奠定了坚实基础。整个过程中，单应性矩阵发挥了关键的坐标映射作用，而RANSAC算法则保证了在复杂场景下的算法鲁棒性，使得即使存在一定比例的误匹配，仍能获得令人满意的拼接效果。<br>
 ```python
 # 提取匹配点的坐标
 src_pts = np.float32([kp_b[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)  # 图像的关键点
@@ -105,10 +124,15 @@ fus_img[-y_min : h_a - y_min, -x_min : w_a - x_min] = img_a
 <img src="https://github.com/user-attachments/assets/4ad09284-fe7f-45c6-962b-717f0f14a545" alt="rgb_image" width="400">
 
 ### 5、不规则图像拼接
-
-这里的两张图像的拼接图出现黑边是因为透视变换造成的空白区域，将小图片扩大以匹配透视关系
+- 1.尺寸不匹配：<br>
+这里的两张图像的拼接图出现黑边是因为透视变换造成的空白区域，将小图片扩大以匹配透视关系。
 <img src="https://github.com/user-attachments/assets/ef095c0b-a75b-448c-90bb-1d63f7b95fb7" alt="rgb_image" width="500">
-<img src="https://github.com/user-attachments/assets/e4ea5f86-12f1-4ea6-83d3-13a42feb0b96" alt="rgb_image" width="400">
+<img src="https://github.com/user-attachments/assets/e4ea5f86-12f1-4ea6-83d3-13a42feb0b96" alt="rgb_image" width="400"> <br>
+
+- 2.亮度条件：<br>
+这里用亮度对比度的调整模拟不同光照条件下的拼接情况，可以看到因为光照条件的不同情况下关键点的匹配会出现变化导致图片拼接时出现细微误差。
+<img src="https://github.com/user-attachments/assets/fa8fab23-d83e-4ded-a5ba-d1111e9f6fe8" alt="rgb_image" width="500">
+<img src="https://github.com/user-attachments/assets/d11d0350-ee12-44e2-b6da-88cd8b3ffdce" alt="rgb_image" width="400">
 
 ## 三、实验结果与分析
 
@@ -148,11 +172,11 @@ fus_img[-y_min : h_a - y_min, -x_min : w_a - x_min] = img_a
 ## 四、实验总结与心得
 ### 1. 技术收获
 - 特征检测方面：<br>
-通过本次实验，我深入理解了SIFT（Scale-Invariant Feature Transform）特征检测算法的工作原理。SIFT通过构建高斯金字塔和DoG（Difference of Gaussian）空间来检测尺度不变的特征点，然后基于局部梯度方向生成具有旋转不变性的描述符。这种方法的优势在于其对尺度、旋转和光照变化的鲁棒性，使其成为图像匹配和拼接任务中的首选算法。
+通过本次实验，我深入理解了SIFT特征检测算法的工作原理。SIFT通过构建高斯金字塔和DoG空间来检测尺度不变的特征点，然后基于局部梯度方向生成具有旋转不变性的描述符。这种方法的优势在于其对尺度、旋转和光照变化的鲁棒性，使其成为图像匹配和拼接任务中的首选算法。
 - 特征匹配方面：<br>
-实验让我掌握了FLANN（Fast Library for Approximate Nearest Neighbors）匹配器的使用方法和参数调优技巧。FLANN通过构建KD树索引实现高效的近似最近邻搜索，在大规模特征匹配中显著提高了效率。同时，Lowe's比率测试的应用让我认识到特征匹配质量评估的重要性，通过距离比率筛选可以有效提高匹配的可靠性。
+实验让我掌握了FLANN匹配器的使用方法和参数调优技巧。FLANN通过构建KD树索引实现高效的近似最近邻搜索，在大规模特征匹配中显著提高了效率。同时，Lowe's比率测试的应用让我认识到特征匹配质量评估的重要性，通过距离比率筛选可以有效提高匹配的可靠性。
 - 图像配准方面：<br>
-单应性矩阵的估计是图像拼接的核心环节。通过RANSAC（Random Sample Consensus）算法估计透视变换矩阵，我理解了如何从含有噪声的匹配点集中鲁棒地估计变换参数。这个过程不仅涉及线性代数中的矩阵运算，还包括对投影几何的理解。
+单应性矩阵的估计是图像拼接的核心环节。通过RANSAC算法估计透视变换矩阵，我理解了如何从含有噪声的匹配点集中鲁棒地估计变换参数。这个过程不仅涉及线性代数中的矩阵运算，还包括对投影几何的理解。
 
 ### 2. 实践体会
 - 参数调优的重要性：
@@ -163,8 +187,6 @@ fus_img[-y_min : h_a - y_min, -x_min : w_a - x_min] = img_a
 这些参数需要根据具体图像特点和任务需求进行精心调整。
 - 问题诊断能力：
 通过观察中间结果和统计分析，我学会了如何诊断拼接过程中出现的问题。比如当匹配点数量过少时，可能是特征检测参数不合适；当拼接出现明显错位时，可能是RANSAC阈值设置不当或存在大量错误匹配。
-
-
 
 
 
