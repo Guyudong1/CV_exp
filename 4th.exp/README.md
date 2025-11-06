@@ -186,8 +186,11 @@ print('测试结果 - loss:{:.4f}, acc:{:.4f}'.format(test_loss, acc))
 ```
 测试结果 - loss:0.3421, acc:0.9052
 ```
-<img src="https://github.com/user-attachments/assets/1a9b6100-5374-4312-85e7-42292678ba9d" alt="rgb_image" width="600">
+<img src="https://github.com/user-attachments/assets/1a9b6100-5374-4312-85e7-42292678ba9d" alt="rgb_image" width="500">
+<img src="https://github.com/user-attachments/assets/0ded3d6f-d8a7-4516-af9b-4b806c345d4d" alt="rgb_image" width="500">
 
-**最后的测试结果和混淆矩阵图也可以很好地证明这个训练好的模型在测试集中有较好的结果，混淆矩阵图中几乎95%的数据都处于其对角线的位置上***
+**最后的测试结果和混淆矩阵图也可以很好地证明这个训练好的模型在测试集中有较好的结果，混淆矩阵图中几乎95%的数据都处于其对角线的位置上，表示在测试数据集上表现良好**
 
-## 三、实验分析
+## 三、实验结果与分析
+
+## 四、实验总结与心得
