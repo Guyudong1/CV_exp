@@ -1,4 +1,4 @@
-# 实验四：多层感知机
+# 实验四：MLP-多层感知机
 ### 202310310169-顾禹东
 
 > **文件说明**  
@@ -44,6 +44,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 ```
 
 ### 3.加载数据
+- 训练数据加载器 `train_loader`:加载 MNIST手写数字数据集训练集
+- 测试数据加载器 `test_loader`:加载 MNIST手写数字数据集测试集
+- 数据预处理`transform`:将PIL图像或numpy数组转换为PyTorch张量
 ```python
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('data', train=True, download=True,
@@ -59,4 +62,45 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=batch_size, shuffle=True)
 
 print("训练数据形状:", train_loader.dataset.data.shape)
+print("测试数据形式:", test_loader.dataset.data.shape)
+```
+```
+输出：
+    训练数据形状: torch.Size([60000, 28, 28])
+    测试数据形式: torch.Size([10000, 28, 28])
+```
+**通过输出可以看出：共加载60,000张训练图片和10,000张测试图片，所有图片的格式都是28*28像素**
+
+## 4.创建MLP模型
+- 首先，需要先定义一个模型类`class MLP(nn.Module)`,`nn.Module`: 所有神经网络模块的基类,提供参数管理、GPU转移、序列化等功能
+- 然后定义初始化方法 `__init__`，这里的代码中定义了两层的全连接层：
+  - `self.l1 = nn.Linear(784, 128)`:输入维度: 784 (28×28) → 输出维度: 128 (隐藏层神经元数量)
+  - `self.l2 = nn.Linear(128, 10)`:输入维度: 128(隐藏层神经元数量) → 输出维度: 10 (对应10个数字类别0-9)
+- 再定义前向传播 `forward`:
+  - `a1 = self.l1(x)`:线性变换 x @ W1 + b1
+  - `x1 = F.relu(a1)`:ReLU激活函数 max(0, a1)
+  - `a2 = self.l2(x1)`:线性变换 x1 @ W2 + b2
+  - `x2 = a2`:输出层
+- 最后创建优化器：
+  - `model = MLP().to(device)`:先实例化MLP模型把模型参数移动到GPU
+  - `optimizer = optim.SGD(model.parameters(), lr=0.1)`:然后使用PyTorch内置优化器，采用梯度下降优化算法和0.1的学习率
+```python
+# 定义MLP模型
+class MLP(nn.Module):
+    def __init__(self):
+        super(MLP, self).__init__()
+        self.l1 = nn.Linear(784, 128)
+        self.l2 = nn.Linear(128, 10)
+
+    def forward(self, x):
+        a1 = self.l1(x)
+        x1 = F.relu(a1)
+        a2 = self.l2(x1)
+        x2 = a2
+        return x2
+
+# 创建模型和优化器
+model = MLP().to(device)
+optimizer = optim.SGD(model.parameters(), lr=0.1)
+print(model)
 ```
