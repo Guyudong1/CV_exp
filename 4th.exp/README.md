@@ -9,6 +9,7 @@
 
 ## 二、实验内容
 ### 1.导入必要库
+
 - `torch`: PyTorch深度学习框架的核心库，提供张量操作和基本功能
 - `torch.nn`: PyTorch的神经网络模块，包含各种层、损失函数和模型定义类
 - `torch.nn.functional`: 包含神经网络相关的函数式接口，如激活函数、损失函数等
@@ -18,6 +19,7 @@
 - `torchvision`: PyTorch的计算机视觉库，提供：
   - `datasets`: 常用数据集加载（如MNIST等）
   - `transforms`: 数据预处理和增强工具
+  
 ```python
 import torch
 import torch.nn as nn
@@ -27,6 +29,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torchvision import datasets, transforms
 ```
+
 **这些库组合起来构成了一个完整的深度学习工作流：**
 - **模型构建**：使用`torch.nn`定义神经网络结构
 - **数据处理**：使用`torchvision`加载和预处理数据
@@ -38,6 +41,7 @@ from torchvision import datasets, transforms
 ### 2.设置超参数和设备
 - `batch_size = 2048`:设置批量大小参数，每次训练时同时处理2048个样本
 - `device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')`:有GPU → 选择GPU加速，无GPU → 选择CPU计算
+
 ```python
 batch_size = 2048
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -47,6 +51,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 - 训练数据加载器 `train_loader`:加载 MNIST手写数字数据集训练集
 - 测试数据加载器 `test_loader`:加载 MNIST手写数字数据集测试集
 - 数据预处理`transform`:将PIL图像或numpy数组转换为PyTorch张量
+
 ```python
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('data', train=True, download=True,
@@ -64,14 +69,17 @@ test_loader = torch.utils.data.DataLoader(
 print("训练数据形状:", train_loader.dataset.data.shape)
 print("测试数据形式:", test_loader.dataset.data.shape)
 ```
+
 ```
 输出：
     训练数据形状: torch.Size([60000, 28, 28])
     测试数据形式: torch.Size([10000, 28, 28])
 ```
+
 **通过输出可以看出：共加载60,000张训练图片和10,000张测试图片，所有图片的格式都是28*28像素**
 
-## 4.创建MLP模型
+### 4.创建MLP模型
+
 - 首先，需要先定义一个模型类`class MLP(nn.Module)`,`nn.Module`: 所有神经网络模块的基类,提供参数管理、GPU转移、序列化等功能
 - 然后定义初始化方法 `__init__`，这里的代码中定义了两层的全连接层：
   - `self.l1 = nn.Linear(784, 128)`:输入维度: 784 (28×28) → 输出维度: 128 (隐藏层神经元数量)
@@ -84,6 +92,7 @@ print("测试数据形式:", test_loader.dataset.data.shape)
 - 最后创建优化器：
   - `model = MLP().to(device)`:先实例化MLP模型把模型参数移动到GPU
   - `optimizer = optim.SGD(model.parameters(), lr=0.1)`:然后使用PyTorch内置优化器，采用梯度下降优化算法和0.1的学习率
+ 
 ```python
 # 定义MLP模型
 class MLP(nn.Module):
@@ -104,3 +113,41 @@ model = MLP().to(device)
 optimizer = optim.SGD(model.parameters(), lr=0.1)
 print(model)
 ```
+
+```
+输出：
+MLP(
+  (l1): Linear(in_features=784, out_features=128, bias=True)
+  (l2): Linear(in_features=128, out_features=10, bias=True)
+)
+```
+
+**通过输出，可以看到两层全连接层的输入输出节点数，值得一提的是下一层的输入节点一定要与上一层的输出节点数量保持一致，否则无法正确构建神经网络**
+
+### 5.模型迭代训练
+
+- `epochs = 10`: 定义迭代次数10次
+- `for epoch in range(epochs):`: 让模型迭代10次训练集
+- `model.train()`: 开始训练
+- `for batch_idx, (x, y) in enumerate(train_loader):`：每次迭代训练集多大，分批次循环训练
+- `x, y = x.view(x.shape[0], -1).to(device), y.to(device)`: 数据预处理，将图像像素信息平铺成一个向量然后输入给GPU
+- `optimizer.zero_grad()`: 每次训练前将梯度清零，防止梯度在不同批次间累积
+- `output = model(x)`：前向传播，得到初步多分类
+- `loss = F.cross_entropy(output, y)`：用自带softmax的交叉熵损失去计算此批次的损失值
+- `loss.backward()`：用计算出的损失值去做反向传播学习
+- `optimizer.step()`：最后通过`4.创建MLP模型`中设置的优化器去做参数的更新，并开始循环迭代批次，直到训练结束为止
+
+```python
+epochs = 10
+for epoch in range(epochs):
+    model.train()
+    for batch_idx, (x, y) in enumerate(train_loader):
+        x, y = x.view(x.shape[0], -1).to(device), y.to(device)
+        optimizer.zero_grad()
+        output = model(x)
+        loss = F.cross_entropy(output, y)
+        loss.backward()
+        optimizer.step()
+```
+
+****
