@@ -2,11 +2,13 @@
 ### 202310310169-顾禹东
 
 > **文件说明**  
-> 本实验的代码在`code.py`文件中，
-> 本实验的图标分析结果在`result`文件夹中。
+> 本实验的原本代码在`code.ipynb`文件中<br>
+> 本实验的图标分析结果在`res`文件夹中<br>
+> 本实验的改进代码在`code+.ipynb`文件中<br>
+> 本实验的改进分析图在`res2`文件夹中<br>
 
 ## 一、实验目的
-
+本实验旨在通过构建多层感知机（MLP, Multi-Layer Perceptron）模型，深入理解神经网络的基本组成与工作原理，掌握其在图像分类任务中的应用。
 ## 二、实验内容
 ### 1.导入必要库
 
@@ -186,11 +188,104 @@ print('测试结果 - loss:{:.4f}, acc:{:.4f}'.format(test_loss, acc))
 ```
 测试结果 - loss:0.3421, acc:0.9052
 ```
-<img src="https://github.com/user-attachments/assets/1a9b6100-5374-4312-85e7-42292678ba9d" alt="rgb_image" width="500">
-<img src="https://github.com/user-attachments/assets/0ded3d6f-d8a7-4516-af9b-4b806c345d4d" alt="rgb_image" width="500">
 
-**最后的测试结果和混淆矩阵图也可以很好地证明这个训练好的模型在测试集中有较好的结果，混淆矩阵图中几乎95%的数据都处于其对角线的位置上，表示在测试数据集上表现良好**
+<img src="https://github.com/user-attachments/assets/1a9b6100-5374-4312-85e7-42292678ba9d" alt="rgb_image" width="320">
+<img src="https://github.com/user-attachments/assets/a17c3efc-1a4d-4265-a18b-4359fc750a7e" alt="rgb_image" width="270">
+<img src="https://github.com/user-attachments/assets/0ded3d6f-d8a7-4516-af9b-4b806c345d4d" alt="rgb_image" width="400">
+
+**最后的测试结果和混淆矩阵图也可以很好地证明这个训练好的模型在测试集中有较好的结果，混淆矩阵图中几乎90%的数据都处于其对角线的位置上，表示在测试数据集上表现良好**
+
+### 7.模型改进
+
+两层感知机只有够用于MNIST数据集的多分类问题，784-128-10的网络层太过浅单不能更好地学习，因此进行模型的改进：
+- **加深网络**：三层感知机，784 → 256 → 128 → 64 → 10
+- **激活函数**：Relu换成更平滑的GELU
+- **随机失活**：引用Dropout，防止过拟合
+- **批归一化**：在每层全连接层后引用BatchNorm，防止梯度爆炸或梯度消失
+- **调整学习率**：在学习率中引用Adam自适应学习率，使其更快收敛
+  
+```python
+class MLP(nn.Module):
+    def __init__(self):
+        super(MLP, self).__init__()
+        self.fc1 = nn.Linear(784, 256)
+        self.bn1 = nn.BatchNorm1d(256)
+        self.fc2 = nn.Linear(256, 128)
+        self.bn2 = nn.BatchNorm1d(128)
+        self.fc3 = nn.Linear(128, 64)
+        self.bn3 = nn.BatchNorm1d(64)
+        self.fc4 = nn.Linear(64, 10)
+        self.drop = nn.Dropout(0.3)
+        self.act = nn.GELU()
+
+    def forward(self, x):
+        x = self.act(self.bn1(self.fc1(x)))
+        x = self.drop(x)
+        x = self.act(self.bn2(self.fc2(x)))
+        x = self.drop(x)
+        x = self.act(self.bn3(self.fc3(x)))
+        x = self.fc4(x)
+        return x
+
+# 创建模型和优化器
+model = MLP().to(device)
+optimizer = optim.Adam(model.parameters(), lr=1e-3)
+print(model)
+```
+```
+整体输出：
+MLP(
+  (fc1): Linear(in_features=784, out_features=256, bias=True)
+  (bn1): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (fc2): Linear(in_features=256, out_features=128, bias=True)
+  (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (fc3): Linear(in_features=128, out_features=64, bias=True)
+  (bn3): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (fc4): Linear(in_features=64, out_features=10, bias=True)
+  (drop): Dropout(p=0.3, inplace=False)
+  (act): GELU(approximate='none')
+)
+
+Epoch [1/10] - Loss: 1.1148
+Epoch [2/10] - Loss: 0.4710
+Epoch [3/10] - Loss: 0.2868
+Epoch [4/10] - Loss: 0.2063
+Epoch [5/10] - Loss: 0.1606
+Epoch [6/10] - Loss: 0.1306
+Epoch [7/10] - Loss: 0.1128
+Epoch [8/10] - Loss: 0.0977
+Epoch [9/10] - Loss: 0.0838
+Epoch [10/10] - Loss: 0.0749
+
+测试结果 - loss:0.0679, acc:0.9795
+```
+<img src="https://github.com/user-attachments/assets/9ce243e2-4339-4c3c-9c88-663658747358" alt="rgb_image" width="550">
+<img src="https://github.com/user-attachments/assets/182d90bf-9855-4873-be2b-a92a518223c1" alt="rgb_image" width="455">
+<img src="https://github.com/user-attachments/assets/9bc6dddc-2006-49d7-94b0-f4ad9a680da7" alt="rgb_image" width="400">
+<img src="https://github.com/user-attachments/assets/f4c56a57-318f-499d-bc92-b8a1abb082c4" alt="rgb_image" width="560">
+
+**改进模型后，在测试集上有较大进步**
 
 ## 三、实验结果与分析
+### 1.原始模型结果
+原始的二层感知机结构为 784 → 128 → 10，采用 ReLU 激活函数与 SGD 优化器。在 10 轮训练后，模型的最终测试准确率约为 90.52%。
+从损失下降曲线可以看出，模型能够稳定收敛，但下降速度较慢，且在后期趋于平缓，说明模型的表达能力有限。
+### 2.改进模型结果
+改进后的模型结构为 784 → 256 → 128 → 64 → 10，并引入以下优化：
+- 激活函数由 ReLU 改为 GELU，更平滑的梯度使模型收敛更稳定；
+- 每层后加入 BatchNorm，缓解梯度消失并加快收敛；
+- 引入 Dropout(0.3)，随机失活部分神经元以防止过拟合；
+- 优化器由 SGD 改为 Adam，自适应学习率提高了训练效率。
+经过训练后，模型在测试集上达到 97.95% 的准确率，损失值仅为 0.0679。从训练曲线看，改进模型在前几轮即可快速降低损失，收敛速度明显加快。混淆矩阵的对角线更为清晰，错误样本明显减少，表明模型的泛化性能显著提升。
+### 3.结论：
+通过网络结构优化与正则化手段，模型在分类准确率、收敛速度与稳定性上均有显著提升，验证了深层结构与合理正则化的重要性。
 
 ## 四、实验总结与心得
+本实验通过从最基础的两层感知机入手，逐步改进为具有更强表达能力的多层感知机，使我对深度学习中模型结构、激活函数、优化方法和正则化策略有了更深入的理解。
+在实验中，我发现：
+- 网络深度与性能呈正相关，但需配合适当的归一化和正则化；
+- 激活函数的选择 对模型性能影响显著，GELU 相较于 ReLU 在梯度平滑性上表现更优；
+- BatchNorm 与 Dropout 的结合可以在提高模型稳定性的同时有效防止过拟合；
+- Adam 优化器 收敛速度更快、对学习率敏感度更低，更适合深层网络。
+
+总体而言，本实验让我系统掌握了多层感知机的原理与实现方法，并通过对比分析学会了如何从结构、优化与正则化三个角度改进模型性能。这不仅提升了我对神经网络的理解，也为后续更复杂的模型（如卷积神经网络、Transformer 等）奠定了坚实的基础。
