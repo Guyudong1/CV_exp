@@ -164,6 +164,8 @@ Epoch [10/10] - Loss: 0.3629
 ```
 <img src="https://github.com/user-attachments/assets/56b5d70f-f787-4f28-99b4-fabab48684ff" alt="rgb_image" width="600">
 
+**通过迭代中的实时结果和输出的损失函数图可以看到通过这个简单的二层感知机还是可以取得效果较好的训练的**
+
 ### 6.测试模型
 ```python
 model.eval()
@@ -185,5 +187,7 @@ print('测试结果 - loss:{:.4f}, acc:{:.4f}'.format(test_loss, acc))
 测试结果 - loss:0.3421, acc:0.9052
 ```
 <img src="https://github.com/user-attachments/assets/1a9b6100-5374-4312-85e7-42292678ba9d" alt="rgb_image" width="600">
+
+**最后的测试结果和混淆矩阵图也可以很好地证明这个训练好的模型在测试集中有较好的结果，混淆矩阵图中几乎95%的数据都处于其对角线的位置上***
 
 ## 三、实验分析
