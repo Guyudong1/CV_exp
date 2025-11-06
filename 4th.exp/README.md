@@ -184,4 +184,6 @@ print('测试结果 - loss:{:.4f}, acc:{:.4f}'.format(test_loss, acc))
 ```
 测试结果 - loss:0.3421, acc:0.9052
 ```
+<img src="https://github.com/user-attachments/assets/1a9b6100-5374-4312-85e7-42292678ba9d" alt="rgb_image" width="600">
+
 ## 三、实验分析
