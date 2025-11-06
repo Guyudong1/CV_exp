@@ -149,5 +149,39 @@ for epoch in range(epochs):
         loss.backward()
         optimizer.step()
 ```
+```
+迭代结果：
+Epoch [1/10] - Loss: 2.0068
+Epoch [2/10] - Loss: 1.1735
+Epoch [3/10] - Loss: 0.7396
+Epoch [4/10] - Loss: 0.5797
+Epoch [5/10] - Loss: 0.4986
+Epoch [6/10] - Loss: 0.4502
+Epoch [7/10] - Loss: 0.4184
+Epoch [8/10] - Loss: 0.3964
+Epoch [9/10] - Loss: 0.3789
+Epoch [10/10] - Loss: 0.3629
+```
+<img src="https://github.com/user-attachments/assets/56b5d70f-f787-4f28-99b4-fabab48684ff" alt="rgb_image" width="600">
 
-****
+### 6.测试模型
+```python
+model.eval()
+correct = 0
+test_loss = 0
+with torch.no_grad():
+    for batch_idx, (x, y) in enumerate(test_loader):
+        x, y = x.view(x.shape[0], -1).to(device), y.to(device)
+        output = model(x)
+        test_loss += F.cross_entropy(output, y)
+        pred = output.max(1, keepdim=True)[1]
+        correct += pred.eq(y.view_as(pred)).sum().item()
+
+test_loss = test_loss / (batch_idx + 1)
+acc = correct / len(test_loader.dataset)
+print('测试结果 - loss:{:.4f}, acc:{:.4f}'.format(test_loss, acc))
+```
+```
+测试结果 - loss:0.3421, acc:0.9052
+```
+## 三、实验分析
