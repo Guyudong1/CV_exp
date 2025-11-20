@@ -91,6 +91,7 @@ print("测试数据形式:", testloader.dataset.data.shape)
 - 第三层全连接：（MNIST只有10类，第三层作为分类层）
   - 输入：84
   - 输出：10
+
 ```python
 class Net(nn.Module):
     def __init__(self):
@@ -121,7 +122,6 @@ class Net(nn.Module):
         # 分类层
         x = self.clf(x)
         return x
-
 
 model = Net().to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-2)
@@ -165,5 +165,55 @@ for epoch in range(epochs):
 
 ```
 训练结果：
-
+epoch:0, loss:2.3013, acc:0.1135
+epoch:1, loss:1.4100, acc:0.4686
+epoch:2, loss:0.2615, acc:0.9174
+epoch:3, loss:0.1532, acc:0.9509
+epoch:4, loss:0.0905, acc:0.9713
+epoch:5, loss:0.0772, acc:0.9765
+epoch:6, loss:0.0711, acc:0.9776
+epoch:7, loss:0.0730, acc:0.9778
+epoch:8, loss:0.0514, acc:0.9839
+epoch:9, loss:0.0469, acc:0.9861
+epoch:10, loss:0.0410, acc:0.9867
+epoch:11, loss:0.0453, acc:0.9859
+epoch:12, loss:0.0439, acc:0.9856
+epoch:13, loss:0.0405, acc:0.9874
+epoch:14, loss:0.0400, acc:0.9880
+epoch:15, loss:0.0505, acc:0.9846
+epoch:16, loss:0.0416, acc:0.9873
+epoch:17, loss:0.0464, acc:0.9883
+epoch:18, loss:0.0516, acc:0.9853
+epoch:19, loss:0.0390, acc:0.9889
+epoch:20, loss:0.0405, acc:0.9881
+epoch:21, loss:0.0419, acc:0.9887
+epoch:22, loss:0.0407, acc:0.9888
+epoch:23, loss:0.0389, acc:0.9902
+epoch:24, loss:0.0423, acc:0.9890
+epoch:25, loss:0.0472, acc:0.9882
+epoch:26, loss:0.0418, acc:0.9886
+epoch:27, loss:0.0472, acc:0.9878
+epoch:28, loss:0.0385, acc:0.9900
+epoch:29, loss:0.0477, acc:0.9878
 ```
+
+```python
+plt.figure(figsize=(10,4))
+plt.subplot(1,2,1)
+plt.plot(losses, label='Test Loss')
+plt.title("Loss Curve")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.grid()
+
+plt.subplot(1,2,2)
+plt.plot(accs, label='Test Acc')
+plt.title("Accuracy Curve")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.grid()
+
+plt.show()
+```
+
+### 6.测试模型
