@@ -66,25 +66,24 @@ print("测试数据形式:", testloader.dataset.data.shape)
 ### 4.创建模型
 
 - 输入: 28×28（MNIST图像尺寸）
-- 第一层卷积:（6*24*24）
-  - 卷积核: 5×5
-  - 输出尺寸: (28-5+1) = 24×24
+- 第一层卷积:（6×28×28）
+  - 卷积核: 5×5, padding=2
+  - 输出尺寸: (28+2×2-5+1) = 28×28
   - 通道数: 6
-- 第一层池化:（6*12*12）
+- 第一层池化:（6×14×14）
   - 池化核: 2×2, stride=2
-  - 输出尺寸: 24/2 = 12×12
+  - 输出尺寸: 28/2 = 14×14
   - 通道数: 6
-- 第二层卷积:（16*8*8）
+- 第二层卷积:（16×10×10）
   - 卷积核: 5×5
-  - 输出尺寸: (12-5+1) = 8×8
+  - 输出尺寸: (14-5+1) = 10×10
   - 通道数: 16
-- 第二层池化:（16*4*4）
+- 第二层池化:（16×5×5）
   - 池化核: 2×2, stride=2
-  - 输出尺寸: 8/2 = 4×4
+  - 输出尺寸: 10/2 = 5×5
   - 通道数: 16
-**所以对应的连接层的输入格式应该是（16*4*4），不是PDF中的（16*5*5），输出格式不影响**
 - 第一层全连接：
-  - 输入：16*4*4
+  - 输入：16×5×5
   - 输出：120
 - 第二层全连接：
   - 输入：120
@@ -96,9 +95,9 @@ print("测试数据形式:", testloader.dataset.data.shape)
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 6, 5)     # 输入通道1，输出通道6，卷积核5x5
+        self.conv1 = nn.Conv2d(1, 6, 5, padding=2)     # 输入通道1，输出通道6，卷积核5x5
         self.conv2 = nn.Conv2d(6, 16, 5)    # 输入通道6，输出通道16，卷积核5x5
-        self.fc1 = nn.Linear(16 * 4 * 4, 120)   # 全连接层，输入16*4*4，输出120
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)   # 全连接层，输入16*5*5，输出120
         self.fc2 = nn.Linear(120, 84)   # 全连接层，输入120，输出84
         self.clf = nn.Linear(84, 10)    # 分类层，输入84，输出10
 
@@ -132,3 +131,39 @@ accs, losses = [], []
 ```
 
 ### 5.迭代训练
+
+```python
+# ---- 训练 ----
+for epoch in range(epochs):
+    model.train()
+    for batch_idx, (x, y) in enumerate(trainloader):
+        x, y = x.to(device), y.to(device)
+        optimizer.zero_grad()
+        out = model(x)
+        loss = F.cross_entropy(out, y)
+        loss.backward()
+        optimizer.step()
+
+# ---- 测试 ----
+    model.eval()
+    correct = 0
+    testloss = 0
+    with torch.no_grad():
+        for batch_idx, (x, y) in enumerate(testloader):
+            x, y = x.to(device), y.to(device)
+            out = model(x)
+            testloss += F.cross_entropy(out, y).item()
+            pred = out.max(dim=1)[1]
+            correct += pred.eq(y).sum().item()
+
+    acc = correct / len(testloader.dataset)
+    testloss /= (batch_idx + 1)
+    accs.append(acc)
+    losses.append(testloss)
+    print('epoch:{}, loss:{:.4f}, acc:{:.4f}'.format(epoch, testloss, acc))
+```
+
+```
+训练结果：
+
+```
