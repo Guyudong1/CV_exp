@@ -9,7 +9,7 @@
 
 ## 一、实验目的
 
-本实验是基于LeNet-5的卷积神经网络实验，通过训练MNIST手写数字分类模型并结合可视化，旨在通过构建卷积神经网络，掌握卷积层、池化层和全连接层在图像分类中的作用，理解卷积与池化对图像特征的提取过程。
+本实验是基于LeNet的卷积神经网络实验，通过训练MNIST手写数字分类模型并结合可视化，旨在通过构建卷积神经网络，掌握卷积层、池化层和全连接层在图像分类中的作用，理解卷积与池化对图像特征的提取过程。
 
 ## 二、实验内容
 ### 1.导入必要库
@@ -92,6 +92,14 @@ print("测试数据形式:", testloader.dataset.data.shape)
   - 输入：84
   - 输出：10
 
+所以整体结构包括：
+- 两层卷积和池化
+  - 每层卷积后都接Sigmoid激活函数与平均池化
+- 三层全连接层
+  - FC1：将卷积特征映射到更高层次的语义空间
+  - FC2：进一步抽象特征
+  - FC3（分类层）：输出10类数字的预测概率
+
 ```python
 class Net(nn.Module):
     def __init__(self):
@@ -130,7 +138,13 @@ epochs = 30
 accs, losses = [], []
 ```
 
-### 5.迭代训练
+### 5.训练与测试
+
+**1. 训练阶段**
+在每一个 epoch 中：先将model.train()：将模型设为训练模式然后依次从 trainloader 读取批量数据 (x, y)，然后做前向传播：out = model(x)，再做计算损失：loss = cross_entropy(out, y)，从而推出反向传播：loss.backward()，最后做参数的更新：optimizer.step()。<br>
+其核心目标是通过梯度下降不断减小训练损失，使模型逐步学会从图像中提取数字特征。<br>
+**2. 测试阶段**
+每个 epoch 训练结束后：先model.eval()：进入测试模式，关闭梯度计算：torch.no_grad()，因为在测试过程中，我们只需要利用模型进行 前向传播（forward） 来得到预测结果，而不需要反向传播去更新参数。所以不需要梯度计算。前向计算得到输出 out，计算测试损失 testloss，预测类别：pred = out.max(dim=1)[1]，统计预测正确的数量，用于计算测试准确率 acc。
 
 ```python
 # ---- 训练 ----
@@ -196,7 +210,7 @@ epoch:27, loss:0.0472, acc:0.9878
 epoch:28, loss:0.0385, acc:0.9900
 epoch:29, loss:0.0477, acc:0.9878
 ```
-
+**通过这个输出结果图你也可以发现模型成功收敛，表现稳定。**
 ```python
 plt.figure(figsize=(10,4))
 plt.subplot(1,2,1)
@@ -215,5 +229,40 @@ plt.grid()
 
 plt.show()
 ```
+<img width="1000" height="400" alt="loss_acc_curve" src="https://github.com/user-attachments/assets/5a9f3f68-a394-4b83-9385-f498f362f553" />
 
-### 6.测试模型
+**通过损失值曲线和准确率曲线图，也可以看出模型收敛良好，未出现明显过拟合，并且结果优秀。**
+
+- 然后用测试的混淆矩阵去做测试数据分析：
+```
+y_true = []
+y_pred = []
+
+model.eval()
+with torch.no_grad():
+    for x, y in testloader:
+        x, y = x.to(device), y.to(device)
+        out = model(x)
+        pred = out.max(dim=1)[1]
+        y_true.extend(y.cpu().numpy())
+        y_pred.extend(pred.cpu().numpy())
+
+cm = confusion_matrix(y_true, y_pred)
+
+plt.figure(figsize=(8,6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("True")
+plt.savefig("res1/confusion_matrix.png")
+plt.show()
+```
+ <img width="800" height="600" alt="confusion_matrix" src="https://github.com/user-attachments/assets/d0381577-5a80-4a46-a573-5c100da379c0" />
+ 
+**混淆矩阵图中几乎95%的数据都处于其对角线的位置上，表示在测试数据集上表现良好，主要的错误出在4与9/5与3/7与9这些上，因为有相似度所以出错不可避免**
+  
+### 6.可视化每层的效果
+<img width="1200" height="200" alt="conv1_feature" src="https://github.com/user-attachments/assets/5f17b895-27a4-4b1d-8560-0153c774be87" />
+<img width="1200" height="200" alt="pool1_feature" src="https://github.com/user-attachments/assets/8abf409b-18ee-42c6-881f-cd0b98507562" />
+<img width="1200" height="600" alt="conv2_feature" src="https://github.com/user-attachments/assets/b135d8d9-2f7e-4e9b-a2fa-a1df53f828fc" />
+<img width="1200" height="600" alt="pool2_feature" src="https://github.com/user-attachments/assets/feebf097-f019-4605-b65b-6b322b623cd2" />
