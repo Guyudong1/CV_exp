@@ -262,7 +262,41 @@ plt.show()
 ### 6.可视化每层的效果
 
 为了进一步理解卷积神经网络的内部工作机制，本实验对 LeNet-5 模型的中间特征进行了可视化，包括 第一层卷积输出、第一层池化输出、第二层卷积输出以及第二层池化输出。
+```
+model.eval()
+with torch.no_grad():
+    x, y = next(iter(testloader))
+    x = x.to(device)
+    # conv1 feature map
+    f1 = F.sigmoid(model.conv1(x))
+    p1 = F.avg_pool2d(f1, 2)
+    # conv2 feature map
+    f2 = F.sigmoid(model.conv2(p1))
+    p2 = F.avg_pool2d(f2, 2)
 
+def show_feature_maps(feature_maps, title, filename):
+    fm = feature_maps[0].cpu().numpy()   # 取 batch 的第一个样本
+    C = fm.shape[0]
+
+    cols = 6
+    rows = int(np.ceil(C / cols))
+
+    plt.figure(figsize=(12, rows * 2))
+    plt.suptitle(title)
+
+    for i in range(C):
+        plt.subplot(rows, cols, i+1)
+        plt.imshow(fm[i], cmap='gray')
+        plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(f"res1/{filename}.png")
+    plt.show()
+
+show_feature_maps(f1, "Conv1 Feature Maps", "conv1_feature")
+show_feature_maps(p1, "Pool1 Feature Maps", "pool1_feature")
+show_feature_maps(f2, "Conv2 Feature Maps", "conv2_feature")
+show_feature_maps(p2, "Pool2 Feature Maps", "pool2_feature")
+```
 <img width="1200" height="200" alt="conv1_feature" src="https://github.com/user-attachments/assets/5f17b895-27a4-4b1d-8560-0153c774be87" />
 <img width="1200" height="200" alt="pool1_feature" src="https://github.com/user-attachments/assets/8abf409b-18ee-42c6-881f-cd0b98507562" />
 <img width="1200" height="600" alt="conv2_feature" src="https://github.com/user-attachments/assets/b135d8d9-2f7e-4e9b-a2fa-a1df53f828fc" />
