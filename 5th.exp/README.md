@@ -52,8 +52,8 @@ trainloader = torch.utils.data.DataLoader(datasets.MNIST('data', train=True, dow
 testloader = torch.utils.data.DataLoader(datasets.MNIST('data', train=False, download=True,
               transform=transforms.Compose([transforms.ToTensor()])), batch_size=batch_size, shuffle=True)
 
-print("训练数据形状:", train_loader.dataset.data.shape)
-print("测试数据形式:", test_loader.dataset.data.shape)
+print("训练数据形状:", trainloader.dataset.data.shape)
+print("测试数据形式:", testloader.dataset.data.shape)
 ```
 
 ```
@@ -61,3 +61,74 @@ print("测试数据形式:", test_loader.dataset.data.shape)
     训练数据形状: torch.Size([60000, 28, 28])
     测试数据形式: torch.Size([10000, 28, 28])
 ```
+**通过输出可以看出：共加载60,000张训练图片和10,000张测试图片，所有图片的格式都是28*28像素**
+
+### 4.创建模型
+
+- 输入: 28×28（MNIST图像尺寸）
+- 第一层卷积:（6*24*24）
+  - 卷积核: 5×5
+  - 输出尺寸: (28-5+1) = 24×24
+  - 通道数: 6
+- 第一层池化:（6*12*12）
+  - 池化核: 2×2, stride=2
+  - 输出尺寸: 24/2 = 12×12
+  - 通道数: 6
+- 第二层卷积:（16*8*8）
+  - 卷积核: 5×5
+  - 输出尺寸: (12-5+1) = 8×8
+  - 通道数: 16
+- 第二层池化:（16*4*4）
+  - 池化核: 2×2, stride=2
+  - 输出尺寸: 8/2 = 4×4
+  - 通道数: 16
+**所以对应的连接层的输入格式应该是（16*4*4），不是PDF中的（16*5*5），输出格式不影响**
+- 第一层全连接：
+  - 输入：16*4*4
+  - 输出：120
+- 第二层全连接：
+  - 输入：120
+  - 输出：84
+- 第三层全连接：（MNIST只有10类，第三层作为分类层）
+  - 输入：84
+  - 输出：10
+```python
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(1, 6, 5)     # 输入通道1，输出通道6，卷积核5x5
+        self.conv2 = nn.Conv2d(6, 16, 5)    # 输入通道6，输出通道16，卷积核5x5
+        self.fc1 = nn.Linear(16 * 4 * 4, 120)   # 全连接层，输入16*4*4，输出120
+        self.fc2 = nn.Linear(120, 84)   # 全连接层，输入120，输出84
+        self.clf = nn.Linear(84, 10)    # 分类层，输入84，输出10
+
+    def forward(self, x):
+        # conv1
+        x = self.conv1(x)
+        x = F.sigmoid(x)    # 激活函数sigmoid()
+        x = F.avg_pool2d(x, kernel_size=2, stride=2)    # 平均池化层，kernel=2x2，步长2
+        # conv2
+        x = self.conv2(x)
+        x = F.sigmoid(x)    # 激活函数sigmoid()
+        x = F.avg_pool2d(x, kernel_size=2, stride=2)    # 平均池化层，2x2，步长2
+        # 展开，从第1维开始展开
+        x = x.view(x.size(0), -1)
+        # 全连接层1
+        x = self.fc1(x)
+        x = F.sigmoid(x)    # 激活函数sigmoid()
+        # 全连接层2
+        x = self.fc2(x)
+        x = F.sigmoid(x)    # 激活函数sigmoid()
+        # 分类层
+        x = self.clf(x)
+        return x
+
+
+model = Net().to(device)
+optimizer = optim.Adam(model.parameters(), lr=1e-2)
+
+epochs = 30
+accs, losses = [], []
+```
+
+### 5.迭代训练
