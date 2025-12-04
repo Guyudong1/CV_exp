@@ -476,6 +476,11 @@ for epoch in range(epochs):
 ```
 ### 6.可视化训练结果
 
+在这里根据上面`accs, losses = [], []`两个列表粗储存的信息去做可视化结果分析.
+
+- 1.损失值曲线
+- 2.准确率曲线
+
 ```python
 plt.figure(figsize=(10,4))
 # Loss 曲线
@@ -495,7 +500,9 @@ plt.savefig("res/1.png")
 plt.show()
 ```
 
+
 ### 7.迁移学习对比
+
 
 ## 三、实验结果与分析
 
