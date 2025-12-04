@@ -472,8 +472,18 @@ for epoch in range(epochs):
 ```
 ```
 输出结果：
-
+epoch 0: loss=0.3662, acc=0.8640
+epoch 1: loss=0.3117, acc=0.8990
+epoch 2: loss=0.2872, acc=0.9020
+epoch 3: loss=0.2769, acc=0.9090
+epoch 4: loss=0.2826, acc=0.9090
+epoch 5: loss=0.2801, acc=0.9100
+epoch 6: loss=0.3078, acc=0.9150
+epoch 7: loss=0.3275, acc=0.9020
+epoch 8: loss=0.2699, acc=0.9240
+epoch 9: loss=0.3146, acc=0.9210
 ```
+
 ### 6.可视化训练结果
 
 在这里根据上面`accs, losses = [], []`两个列表粗储存的信息去做可视化结果分析.
@@ -499,6 +509,7 @@ plt.tight_layout()
 plt.savefig("res/1.png")
 plt.show()
 ```
+<img width="1000" height="400" alt="1" src="https://github.com/user-attachments/assets/74b0cf5a-4d00-4b03-9c51-2196f348dc25" />
 
 
 ### 7.迁移学习对比
