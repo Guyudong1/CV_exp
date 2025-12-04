@@ -412,9 +412,15 @@ Forward/backward pass size (MB): 228.65
 Params size (MB): 95.87
 Estimated Total Size (MB): 325.55
 ```
-这里
+
+**这里通过观察可以发现：**
+
+- 这里有许多`Conv2d+BatchNorm2d+BasicConv2d`的组合模块:这些组合是基础的卷积模块，用于提取低层特征
+- 在这些组合模块中穿插着`InceptionA/B/C/D/E`模块：这些Inception模块就是Inception模型的核心，通过包含多条分支拼接，在表示卷积神经网络上做到减小参数。
 
 ### 5.训练及测试
+
+然后模型导入完并且将模型预处理权重也导入过来后，现在开始做Inceptionv3模型在MNIST集上的训练和测试循环：
 
 ```python
 # ----3.训练/测试----
