@@ -470,7 +470,10 @@ for epoch in range(epochs):
     losses.append(avg_loss)
     print(f'epoch {epoch}: loss={avg_loss:.4f}, acc={acc:.4f}')
 ```
+```
+输出结果：
 
+```
 ### 6.可视化训练结果
 
 
