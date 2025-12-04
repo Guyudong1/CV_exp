@@ -511,8 +511,34 @@ plt.show()
 ```
 <img width="1000" height="400" alt="1" src="https://github.com/user-attachments/assets/74b0cf5a-4d00-4b03-9c51-2196f348dc25" />
 
+**通过这张图可以发现：**
 
 ### 7.迁移学习对比
+
+通过`code.py`将导入预训练权重的模型和不导入预训练权重的模型分别训练。其中，有预训练权重的模型用较小学习率`1e-4`，无预训练权重的模型用较大学习率`1e-3`,然后将两个模型的训练日志和可视化作对比得以下结果：
+
+```
+            无预训练权重             |               有预训练权重
+epoch 0: loss=0.6521, acc=0.7600    |    epoch 0: loss=0.3264, acc=0.8800
+epoch 1: loss=0.5410, acc=0.8050    |    epoch 1: loss=0.3074, acc=0.8880
+epoch 2: loss=0.4895, acc=0.8110    |    epoch 2: loss=0.2442, acc=0.9240
+epoch 3: loss=0.5703, acc=0.8020    |    epoch 3: loss=0.3167, acc=0.9020
+epoch 4: loss=0.4326, acc=0.8430    |    epoch 4: loss=0.2731, acc=0.9170
+epoch 5: loss=0.4281, acc=0.8320    |    epoch 5: loss=0.2992, acc=0.9190
+epoch 6: loss=0.3857, acc=0.8730    |    epoch 6: loss=0.4041, acc=0.8830
+epoch 7: loss=0.3693, acc=0.8730    |    epoch 7: loss=0.3086, acc=0.9080
+epoch 8: loss=0.4474, acc=0.8390    |    epoch 8: loss=0.3438, acc=0.9080
+epoch 9: loss=0.3880, acc=0.8570    |    epoch 9: loss=0.3277, acc=0.9230
+```
+
+<img width="2086" height="734" alt="comparison_pretrain_vs_no_pretrain" src="https://github.com/user-attachments/assets/f18e2bc2-ef75-43fd-8a7c-bd4d4408c39c" />
+
+
+
+
+
+
+
 
 
 ## 三、实验结果与分析
