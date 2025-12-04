@@ -421,6 +421,14 @@ Estimated Total Size (MB): 325.55
 ### 5.训练及测试
 
 然后模型导入完并且将模型预处理权重也导入过来后，现在开始做Inceptionv3模型在MNIST集上的训练和测试循环：
+- 1.设置两个列表用于记录每个epoch的准确率和损失值，然后设置10epoch
+- 2.`model.train()`:切换成训练模式，然后每个epoch循环训练
+- 3.`x, y = x.to(device), y.to(device)`:将数据移动到GPU上加速运算
+- 4.`optimizer.zero_grad()`:每次梯度清零
+- 5.`out = model(x).logits`:前向传播
+- 6.`loss = F.cross_entropy(out, y)`:计算交叉熵损失
+- 7.`loss.backward()`:反向传播
+- 8.`optimizer.step()`:更新参数
 
 ```python
 # ----3.训练/测试----
@@ -436,7 +444,17 @@ for epoch in range(epochs):
         loss = F.cross_entropy(out, y)
         loss.backward()
         optimizer.step()
+```
 
+**然后测试**
+- 1.`model.eval()`:切换成评估模式
+- 2.`with torch.no_grad():`:关闭梯度计算，因为是预测不需要反向传播只需要前向根据参数计算得出结果
+- 3.`out = model(x)`:由模型去输出预测结果
+- 4.`total_loss += F.cross_entropy(out, y).item()`:累积计算每个batch的交叉熵损失，用于输出结果
+- 5.`correct += (out.argmax(1) == y).sum().item()`:累计计算正确预测数量，用于输出结果
+- 6.最后计算完了以后输出每个epoch的测试结果
+
+```python
     model.eval()
     with torch.no_grad():
         correct, total_loss = 0, 0.
@@ -452,6 +470,7 @@ for epoch in range(epochs):
     losses.append(avg_loss)
     print(f'epoch {epoch}: loss={avg_loss:.4f}, acc={acc:.4f}')
 ```
+
 ### 6.可视化训练结果
 
 
