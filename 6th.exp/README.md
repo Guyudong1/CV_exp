@@ -476,6 +476,26 @@ for epoch in range(epochs):
 ```
 ### 6.可视化训练结果
 
+```python
+plt.figure(figsize=(10,4))
+# Loss 曲线
+plt.subplot(1,2,1)
+plt.plot(losses, marker='o')
+plt.title("Test Loss Curve")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+# Accuracy 曲线
+plt.subplot(1,2,2)
+plt.plot(accs, marker='o')
+plt.title("Test Accuracy Curve")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.tight_layout()
+plt.savefig("res/1.png")
+plt.show()
+```
+
+### 7.迁移学习对比
 
 ## 三、实验结果与分析
 
