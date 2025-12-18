@@ -195,11 +195,18 @@ Estimated Total Size (MB): 106.01
  - 每个残差模块有两层的卷积+归一+激活
  - 然后每两个残差块后通道数会翻倍（64 -> 128 -> 256 -> 512）,但同时特征图尺寸会减半（56\*56 -> 28\*28 -> 14\*14 -> 7\*7）,这是因为没量过残差模块就进行下采样，直接模块输入连接模块输出，所以
 
-
-
-
 ### 5.训练及测试
 
+然后模型导入完并且将模型预处理权重也导入过来后，现在开始做Inceptionv3模型在MNIST集上的训练和测试循环：
+- 1.设置两个列表用于记录每个epoch的准确率和损失值，然后设置10epoch
+- 2.`model.train()`:切换成训练模式，然后每个epoch循环训练
+- 3.`x, y = x.to(device), y.to(device)`:将数据移动到GPU上加速运算
+- 4.`optimizer.zero_grad()`:每次梯度清零
+- 5.`out = model(x).logits`:前向传播
+- 6.`loss = F.cross_entropy(out, y)`:计算交叉熵损失
+- 7.`loss.backward()`:反向传播
+- 8.`optimizer.step()`:更新参数
+  
 ```python
 accs, losses = [], []
 for epoch in range(epochs):
@@ -212,7 +219,17 @@ for epoch in range(epochs):
         loss = F.cross_entropy(out, y)
         loss.backward()
         optimizer.step()
+```
 
+**然后测试**
+- 1.`model.eval()`:切换成评估模式
+- 2.`with torch.no_grad():`:关闭梯度计算，因为是预测不需要反向传播只需要前向根据参数计算得出结果
+- 3.`out = model(x)`:由模型去输出预测结果
+- 4.`total_loss += F.cross_entropy(out, y).item()`:累积计算每个batch的交叉熵损失，用于输出结果
+- 5.`correct += (out.argmax(1) == y).sum().item()`:累计计算正确预测数量，用于输出结果
+- 6.最后计算完了以后输出每个epoch的测试结果
+
+```
     model.eval()
     correct = 0
     total_loss = 0.0
@@ -236,6 +253,7 @@ for epoch in range(epochs):
 ```
 
 ```
+输出结果：
 Epoch [1/10]  Loss: 0.3548  Acc: 0.8820
 Epoch [2/10]  Loss: 0.2839  Acc: 0.9075
 Epoch [3/10]  Loss: 0.2578  Acc: 0.9120
@@ -249,6 +267,10 @@ Epoch [10/10]  Loss: 0.2451  Acc: 0.9270
 ```
 
 ### 6.可视化训练结果
+
+在这里根据上面`accs, losses = [], []`两个列表粗储存的信息去做可视化结果分析.
+- 1.损失值曲线
+- 2.准确率曲线
 
 ```python
 plt.figure(figsize=(10, 4))
@@ -300,9 +322,130 @@ plt.show()
 
 ### 8.迁移学习对比
 
-```
+通过`code2.py`将导入预训练权重的模型和不导入预训练权重的模型分别训练。其中，有预训练权重的模型用较小学习率`1e-4`，无预训练权重的模型用较大学习率`1e-3`,然后将两个模型的训练日志和可视化作对比得以下结果：
+
+```python
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+from torchvision import datasets, transforms, models
+from torch.utils.data import Subset, DataLoader
+import numpy as np
+import matplotlib.pyplot as plt
+from torchsummary import summary
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import os
+
+batch_size = 16
+epochs = 10
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+os.makedirs("res", exist_ok=True)
+transform = transforms.Compose([
+    transforms.Resize(299),transforms.Grayscale(num_output_channels=3),transforms.ToTensor()
+])
+train_full = datasets.FashionMNIST('data', train=True, download=True, transform=transform)
+test_full = datasets.FashionMNIST('data', train=False, download=True, transform=transform)
+n = 10  # 选取 1/10 的数据
+rng = np.random.default_rng(42)
+train_idx = rng.choice(len(train_full), len(train_full)//n, replace=False)
+test_idx = rng.choice(len(test_full), len(test_full)//n, replace=False)
+train_loader = DataLoader(Subset(train_full, train_idx), batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(Subset(test_full, test_idx), batch_size=batch_size, shuffle=False)
+
+# 3. 训练函数
+def train_model(use_pretrained=True):
+    """训练 Inception-v3 模型并返回测试结果"""
+    if use_pretrained:
+        print("\n=== 使用预训练权重 ===")
+        model = models.inception_v3(weights=models.Inception_V3_Weights.DEFAULT)
+        lr = 1e-4
+    else:
+        print("\n=== 不使用预训练权重 ===")
+        model = models.inception_v3(weights=None)
+        lr = 1e-3
+
+    model.fc = nn.Linear(model.fc.in_features, 10)
+    model = model.to(device)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    summary(model, input_size=(3, 299, 299))
+
+    accs, losses = [], []
+    for epoch in range(epochs):
+        model.train()
+        for x, y in train_loader:
+            x, y = x.to(device), y.to(device)
+            optimizer.zero_grad()
+            out, aux_out = model(x)
+            loss = F.cross_entropy(out, y)
+            loss.backward()
+            optimizer.step()
+
+        model.eval()
+        correct, total_loss, all_preds, all_labels = 0, 0.0, [], []
+        with torch.no_grad():
+            for x, y in test_loader:
+                x, y = x.to(device), y.to(device)
+                out = model(x)
+                total_loss += F.cross_entropy(out, y).item()
+                preds = out.argmax(1)
+                correct += (preds == y).sum().item()
+                all_preds.extend(preds.cpu().numpy())
+                all_labels.extend(y.cpu().numpy())
+
+        acc = correct / len(test_loader.dataset)
+        avg_loss = total_loss / len(test_loader)
+        accs.append(acc)
+        losses.append(avg_loss)
+        print(f"Epoch [{epoch+1}/{epochs}]  Loss: {avg_loss:.4f}  Acc: {acc:.4f}")
+    return accs, losses, model, all_labels, all_preds
+
+# 4. 训练 & 测试
+accs_no_pretrain, losses_no_pretrain, model_no_pretrain, labels_no_pretrain, preds_no_pretrain = train_model(use_pretrained=False)
+accs_pretrain, losses_pretrain, model_pretrain, labels_pretrain, preds_pretrain = train_model(use_pretrained=True)
+
+# 5. Loss & Accuracy 曲线对比
+plt.figure(figsize=(14, 5))
+
+plt.subplot(1, 2, 1)
+plt.plot(losses_pretrain, 'o-', label='With Pretrained Weights', color='red')
+plt.plot(losses_no_pretrain, 's-', label='Without Pretrained Weights', color='green')
+plt.title("Test Loss Curve Comparison", fontsize=14, fontweight='bold')
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.subplot(1, 2, 2)
+plt.plot(accs_pretrain, 'o-', label='With Pretrained Weights', color='red')
+plt.plot(accs_no_pretrain, 's-', label='Without Pretrained Weights', color='green')
+plt.title("Test Accuracy Curve Comparison", fontsize=14, fontweight='bold')
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig("res/inceptionv3_loss_acc_comparison.png")
+plt.show()
+
+# 6. 混淆矩阵对比
+class_names = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+def plot_cm(all_labels, all_preds, title, filename):
+    cm = confusion_matrix(all_labels, all_preds)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True Label")
+    plt.title(title)
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.show()
+plot_cm(labels_no_pretrain, preds_no_pretrain, "Confusion Matrix Without Pretrained Weights", "res/inceptionv3_cm_no_pretrain.png")
+plot_cm(labels_pretrain, preds_pretrain, "Confusion Matrix With Pretrained Weights", "res/inceptionv3_cm_pretrain.png")
 
 ```
+
 
 
 ## 三、实验结果与分析
