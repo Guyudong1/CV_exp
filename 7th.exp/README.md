@@ -292,11 +292,17 @@ plt.tight_layout()
 plt.savefig("res/resnet18_confusion_matrix.png")
 plt.show()
 ```
-### 7.迁移学习对比
+### 8.迁移学习对比
+
+```
+
+```
 
 
+## 三、实验结果与分析
 
 
+## 四、实验心得与总结
 
 
 
