@@ -269,6 +269,9 @@ plt.savefig("res/resnet18_loss_acc.png")
 plt.show()
 ```
 
+<img width="1000" height="400" alt="resnet18_loss_acc" src="https://github.com/user-attachments/assets/ae38c1cb-afe6-4adc-83a2-d1064ab10631" />
+
+
 ### 7.混淆矩阵
 
 ```python
@@ -292,6 +295,9 @@ plt.tight_layout()
 plt.savefig("res/resnet18_confusion_matrix.png")
 plt.show()
 ```
+
+<img width="800" height="600" alt="resnet18_confusion_matrix" src="https://github.com/user-attachments/assets/1424c305-4d08-4995-84c0-2aa428de213a" />
+
 ### 8.迁移学习对比
 
 ```
