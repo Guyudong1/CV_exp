@@ -342,46 +342,45 @@ batch_size = 16
 epochs = 10
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 os.makedirs("res", exist_ok=True)
-transform = transforms.Compose([
-    transforms.Resize(299),transforms.Grayscale(num_output_channels=3),transforms.ToTensor()
-])
+
+transform = transforms.Compose([ transforms.Resize(224),transforms.Grayscale(num_output_channels=3),transforms.ToTensor()])
 train_full = datasets.FashionMNIST('data', train=True, download=True, transform=transform)
 test_full = datasets.FashionMNIST('data', train=False, download=True, transform=transform)
-n = 10  # 选取 1/10 的数据
+n = 10  # 选取 1/n 的数据
 rng = np.random.default_rng(42)
 train_idx = rng.choice(len(train_full), len(train_full)//n, replace=False)
 test_idx = rng.choice(len(test_full), len(test_full)//n, replace=False)
 train_loader = DataLoader(Subset(train_full, train_idx), batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(Subset(test_full, test_idx), batch_size=batch_size, shuffle=False)
 
-# 3. 训练函数
 def train_model(use_pretrained=True):
-    """训练 Inception-v3 模型并返回测试结果"""
+    """训练 ResNet-18 模型并返回测试结果"""
     if use_pretrained:
         print("\n=== 使用预训练权重 ===")
-        model = models.inception_v3(weights=models.Inception_V3_Weights.DEFAULT)
+        model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
         lr = 1e-4
     else:
         print("\n=== 不使用预训练权重 ===")
-        model = models.inception_v3(weights=None)
+        model = models.resnet18(weights=None)
         lr = 1e-3
-
     model.fc = nn.Linear(model.fc.in_features, 10)
     model = model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    summary(model, input_size=(3, 299, 299))
+    print("\n模型结构摘要:")
+    summary(model, input_size=(3, 224, 224))
 
     accs, losses = [], []
     for epoch in range(epochs):
+        # --- 训练 ---
         model.train()
         for x, y in train_loader:
             x, y = x.to(device), y.to(device)
             optimizer.zero_grad()
-            out, aux_out = model(x)
+            out = model(x)
             loss = F.cross_entropy(out, y)
             loss.backward()
             optimizer.step()
-
+        # --- 测试 ---
         model.eval()
         correct, total_loss, all_preds, all_labels = 0, 0.0, [], []
         with torch.no_grad():
@@ -393,21 +392,16 @@ def train_model(use_pretrained=True):
                 correct += (preds == y).sum().item()
                 all_preds.extend(preds.cpu().numpy())
                 all_labels.extend(y.cpu().numpy())
-
         acc = correct / len(test_loader.dataset)
         avg_loss = total_loss / len(test_loader)
         accs.append(acc)
         losses.append(avg_loss)
         print(f"Epoch [{epoch+1}/{epochs}]  Loss: {avg_loss:.4f}  Acc: {acc:.4f}")
     return accs, losses, model, all_labels, all_preds
-
-# 4. 训练 & 测试
 accs_no_pretrain, losses_no_pretrain, model_no_pretrain, labels_no_pretrain, preds_no_pretrain = train_model(use_pretrained=False)
 accs_pretrain, losses_pretrain, model_pretrain, labels_pretrain, preds_pretrain = train_model(use_pretrained=True)
 
-# 5. Loss & Accuracy 曲线对比
 plt.figure(figsize=(14, 5))
-
 plt.subplot(1, 2, 1)
 plt.plot(losses_pretrain, 'o-', label='With Pretrained Weights', color='red')
 plt.plot(losses_no_pretrain, 's-', label='Without Pretrained Weights', color='green')
@@ -424,26 +418,23 @@ plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
 plt.legend()
 plt.grid(True, alpha=0.3)
-
 plt.tight_layout()
-plt.savefig("res/inceptionv3_loss_acc_comparison.png")
+plt.savefig("res/resnet18_loss_acc_comparison.png")
 plt.show()
 
-# 6. 混淆矩阵对比
-class_names = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+digits = [str(i) for i in range(10)]
 def plot_cm(all_labels, all_preds, title, filename):
     cm = confusion_matrix(all_labels, all_preds)
     plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=digits, yticklabels=digits)
     plt.xlabel("Predicted Label")
     plt.ylabel("True Label")
     plt.title(title)
     plt.tight_layout()
     plt.savefig(filename)
     plt.show()
-plot_cm(labels_no_pretrain, preds_no_pretrain, "Confusion Matrix Without Pretrained Weights", "res/inceptionv3_cm_no_pretrain.png")
-plot_cm(labels_pretrain, preds_pretrain, "Confusion Matrix With Pretrained Weights", "res/inceptionv3_cm_pretrain.png")
-
+plot_cm(labels_no_pretrain, preds_no_pretrain, "Confusion Matrix Without Pretrained Weights", "res/resnet18_cm_no_pretrain.png")
+plot_cm(labels_pretrain, preds_pretrain, "Confusion Matrix With Pretrained Weights", "res/resnet18_cm_pretrain.png")
 ```
 
 
