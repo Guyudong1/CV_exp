@@ -1,4 +1,4 @@
-# 实验7：ResNet网络
+# 实验7：ResNet残差网络
 ### 202310310169-顾禹东
 
 > **文件说明**  
@@ -47,8 +47,8 @@ import numpy as np
 ### 2.设置超参数和设备
 
 - `batch_size = 16`:设置批量大小参数，每次训练时同时处理16个样本
-- `device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')`:有GPU → 选择GPU加速，无GPU → 选择CPU计算
 - `epochs = 10`:设置模型的训练轮数为 10 次
+- `device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')`:有GPU → 选择GPU加速，无GPU → 选择CPU计算
   
 ```python
 batch_size = 16
