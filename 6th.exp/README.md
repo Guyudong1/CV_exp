@@ -49,7 +49,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 ```
 ### 3.加载数据
 
-- 1.因为官方的Inceptionv3模型的标准输入是299*299像素并且3通道，所以为了匹配，将MNIST数据集通过`transforms.Compose`方法将原始的MNIST的28*28*1单通道的图片转换为299*299*3三通道的数据格式，便于适配Inceptionv3。
+- 1.因为官方的Inceptionv3模型的标准输入是299*299像素并且3通道，所以为了匹配，将MNIST数据集通过`transforms.Compose`方法将原始的MNIST的28*28单通道的图片转换为299*299*3三通道的数据格式，便于适配Inceptionv3。
 ```python
 # ----1.数据:Fashion-MNIST 3x299x299,仅取10%----
 transform = transforms.Compose([
