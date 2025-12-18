@@ -193,7 +193,7 @@ Estimated Total Size (MB): 106.01
   - MaxPool2d，最大池化层：池化后64\*112\*112 -> 64\*56\*56
 - 然后有8个BasicBlock模块，这就是残差模块
  - 每个残差模块有两层的卷积+归一+激活
- - 然后每两个残差块后通道数会翻倍（64 -> 128 -> 256 -> 512）,但同时特征图尺寸会减半（56\*56 -> 28\*28 -> 14\*14 -> 7\*7）,这是因为没量过残差模块就进行下采样，直接模块输入连接模块输出，所以
+ - 然后每两个残差块后通道数会翻倍（64 -> 128 -> 256 -> 512）,但同时特征图尺寸会减半（56\*56 -> 28\*28 -> 14\*14 -> 7\*7）
 
 ### 5.训练及测试
 
@@ -421,26 +421,53 @@ plt.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.savefig("res/resnet18_loss_acc_comparison.png")
 plt.show()
-
-digits = [str(i) for i in range(10)]
-def plot_cm(all_labels, all_preds, title, filename):
-    cm = confusion_matrix(all_labels, all_preds)
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=digits, yticklabels=digits)
-    plt.xlabel("Predicted Label")
-    plt.ylabel("True Label")
-    plt.title(title)
-    plt.tight_layout()
-    plt.savefig(filename)
-    plt.show()
-plot_cm(labels_no_pretrain, preds_no_pretrain, "Confusion Matrix Without Pretrained Weights", "res/resnet18_cm_no_pretrain.png")
-plot_cm(labels_pretrain, preds_pretrain, "Confusion Matrix With Pretrained Weights", "res/resnet18_cm_pretrain.png")
 ```
-
+```
+              无预训练权重                                   有预训练权重
+Epoch [1/10]  Loss: 0.5782  Acc: 0.7970    |  Epoch [1/10]  Loss: 0.5062  Acc: 0.8410
+Epoch [2/10]  Loss: 0.5282  Acc: 0.8120    |  Epoch [2/10]  Loss: 0.3746  Acc: 0.8780
+Epoch [3/10]  Loss: 0.4549  Acc: 0.8430    |  Epoch [3/10]  Loss: 0.3229  Acc: 0.8930
+Epoch [4/10]  Loss: 0.4038  Acc: 0.8530    |  Epoch [4/10]  Loss: 0.3200  Acc: 0.9030
+Epoch [5/10]  Loss: 0.4153  Acc: 0.8560    |  Epoch [5/10]  Loss: 0.2858  Acc: 0.9040
+Epoch [6/10]  Loss: 0.4488  Acc: 0.8560    |  Epoch [6/10]  Loss: 0.2880  Acc: 0.9070
+Epoch [7/10]  Loss: 0.4476  Acc: 0.8630    |  Epoch [7/10]  Loss: 0.2875  Acc: 0.8990
+Epoch [8/10]  Loss: 0.4234  Acc: 0.8760    |  Epoch [8/10]  Loss: 0.2926  Acc: 0.9000
+Epoch [9/10]  Loss: 0.5127  Acc: 0.8530    |  Epoch [9/10]  Loss: 0.2872  Acc: 0.9040
+Epoch [10/10]  Loss: 0.5847  Acc: 0.8610   |  Epoch [10/10]  Loss: 0.3030  Acc: 0.9090
+```
+<img width="1400" height="500" alt="resnet18_loss_acc_comparison" src="https://github.com/user-attachments/assets/14f8df90-9aa9-4868-ba0a-04af332d6951" />
 
 
 ## 三、实验结果与分析
 
+### 1.通过summary打印模型网络结构：
+可以发现：
+- 输入：3×224×224 
+- 第一层的特征提取层是（Conv2d+BatchNorm2d+ReLU+MaxPool2d）
+  - Conv2d,卷积层：64个卷积核，卷积后3\*224\*224 -> 64\*112\*112
+  - BatchNorm2d，归一层：将64\*112\*112进行归一化
+  - ReLU，激活层：用ReLu激活函数激活
+  - MaxPool2d，最大池化层：池化后64\*112\*112 -> 64\*56\*56
+- 然后有8个BasicBlock模块，这就是残差模块
+ - 每个残差模块有两层的卷积+归一+激活
+- 虽然在模型结构打印结果中未显示显式的跳跃连接，但ResNet的残差结构实际封装在BasicBlock模块内。在每个残差块中，输入特征一方面经过两层卷积构成残差映射，另一方面通过恒等映射或1×1卷积进行快捷连接，并在块内进行逐元素相加，从而实现残差学习机制。正是由于残差连接能够有效缓解深层网络中的梯度消失和性能退化问题，ResNet才能够采用逐阶段降低特征图空间分辨率、同时增加通道数的设计方式，使网络在保持训练稳定性的同时逐步提取更高层次的语义特征。这就是每两个残差块后通道数会翻倍（64 -> 128 -> 256 -> 512）,但同时特征图尺寸会减半（56\*56 -> 28\*28 -> 14\*14 -> 7\*7）的原因。
+- 最后，线性分类层为了对应MNIST输出设置为10输出格式
+  
+### 2.通过预训练模型的训练日志与可视化结果：
+可以发现：
+- 整体来看，该预训练模型收敛速度快、最终性能表现良好，前5个Epoch完成主要性能提升，后期轻微波动属正常现象，因为在一开始随机选择20%的数据去训练和测试，不会完美的学习训练所有的数据。
+- 模型训练过程中，测试损失前期快速下降体现模型高效学习，后期波动则可能是轻微过拟合或数据波动所致；测试准确率前期快速收敛、后期稳定则说明模型泛化能力较好。
+
+### 3.通过混淆矩阵：
+可以发现：
+- 矩阵对角线上的正确分类数值普遍较高，说明多数类别分类精度较高。
+- 不过模型存在明显的易错类别：0和6常被误分等存在少量跨类别误分，但数量有限。整体来看，模型对多数类别分类效果达标。
+  
+### 4.通过迁移学习和非迁移学习的训练日志与可视化结果：
+可以发现：
+- 在少量数据和较少训练轮次的条件下，迁移学习模型的收敛速度明显更快，一开始准确率已经达到较高水平，损失值也保持在较低范围。
+- 无预训练模型由于从零开始训练，一开始精度低、损失值波动较大，整个收敛过程相对缓慢且不够稳定，因此更大的学习率或者更多的训练迭代次数。
+- 这一现象说明的点和上课时的内容相吻合，迁移学习可以利用预训练模型在大规模数据上学习到的通用特征，使模型在小数据场景下仍能快速达到较好的性能。
 
 ## 四、实验心得与总结
 
