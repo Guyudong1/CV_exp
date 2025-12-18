@@ -250,10 +250,48 @@ Epoch [10/10]  Loss: 0.2451  Acc: 0.9270
 
 ### 6.可视化训练结果
 
+```python
+plt.figure(figsize=(10, 4))
+
+plt.subplot(1, 2, 1)
+plt.plot(losses, marker='o')
+plt.title("Test Loss Curve")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.subplot(1, 2, 2)
+plt.plot(accs, marker='o')
+plt.title("Test Accuracy Curve")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+
+plt.tight_layout()
+plt.savefig("res/resnet18_loss_acc.png")
+plt.show()
 ```
 
-```
+### 7.混淆矩阵
 
+```python
+class_names = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+cm = confusion_matrix(all_labels, all_preds)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt='d',
+    cmap='Blues',
+    xticklabels=class_names,
+    yticklabels=class_names
+)
+
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.title("Confusion Matrix")
+plt.tight_layout()
+plt.savefig("res/resnet18_confusion_matrix.png")
+plt.show()
+```
 ### 7.迁移学习对比
 
 
